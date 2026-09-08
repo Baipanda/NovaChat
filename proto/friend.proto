@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package novachat;
+
+option cc_generic_services = true;
+
+import "common.proto";
+import "user.proto";
+
+message AddFriendRequest {
+  int32 userid = 1;
+  int32 friendid = 2;
+}
+
+message AddFriendResponse {
+  ResultCode result = 1;
+}
+
+message CreateGroupRequest {
+  int32 userid = 1;
+  bytes groupname = 2;
+  bytes groupdesc = 3;
+}
+
+message CreateGroupResponse {
+  ResultCode result = 1;
+  int32 groupid = 2;
+}
+
+message AddGroupRequest {
+  int32 userid = 1;
+  int32 groupid = 2;
+}
+
+message AddGroupResponse {
+  ResultCode result = 1;
+}
+
+message GroupInfo {
+  int32 id = 1;
+  bytes name = 2;
+  bytes desc = 3;
+  repeated UserInfo users = 4;
+}
+
+message QueryGroupsRequest {
+  int32 userid = 1;
+}
+
+message QueryGroupsResponse {
+  ResultCode result = 1;
+  repeated GroupInfo groups = 2;
+}
+
+service FriendServiceRpc {
+  rpc AddFriend(AddFriendRequest) returns (AddFriendResponse);
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
+  rpc AddGroup(AddGroupRequest) returns (AddGroupResponse);
+  rpc QueryGroups(QueryGroupsRequest) returns (QueryGroupsResponse);
+}

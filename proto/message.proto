@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package novachat;
+
+option cc_generic_services = true;
+
+import "common.proto";
+
+// 业务消息体：Gateway 仍可用 JSON 推客户端；落库走 RPC
+message ChatPayload {
+  int32 msgid = 1;
+  int32 fromid = 2;
+  int32 toid = 3;      // 单聊对端 / 群聊时为 groupid
+  bytes msg = 4;
+  bytes time = 5;
+  bool is_group = 6;
+}
+
+message SaveOfflineRequest {
+  int32 userid = 1;
+  bytes msg = 2;       // 序列化后的 JSON 或 payload
+}
+
+message SaveOfflineResponse {
+  ResultCode result = 1;
+}
+
+message QueryOfflineRequest {
+  int32 userid = 1;
+}
+
+message QueryOfflineResponse {
+  ResultCode result = 1;
+  repeated bytes msgs = 2;
+}
+
+message ClearOfflineRequest {
+  int32 userid = 1;
+}
+
+message ClearOfflineResponse {
+  ResultCode result = 1;
+}
+
+message PersistChatRequest {
+  ChatPayload payload = 1;
+}
+
+message PersistChatResponse {
+  ResultCode result = 1;
+}
+
+service MessageServiceRpc {
+  rpc SaveOffline(SaveOfflineRequest) returns (SaveOfflineResponse);
+  rpc QueryOffline(QueryOfflineRequest) returns (QueryOfflineResponse);
+  rpc ClearOffline(ClearOfflineRequest) returns (ClearOfflineResponse);
+  rpc PersistChat(PersistChatRequest) returns (PersistChatResponse);
+}

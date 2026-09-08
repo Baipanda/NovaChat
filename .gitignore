@@ -1,0 +1,27 @@
+# build artifacts
+build/
+bin/
+lib/
+*.o
+*.a
+*.so
+*.so.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# vendored deps (build against ~/deps; see docs/BUILD_CPP.md)
+thirdparty/muduo/
+thirdparty/hiredis/
+
+# local / runtime
+*.log
+/tmp/
+.env
+.env.*
+
+# keep generated protobuf sources that the tree depends on
+# (do not ignore proto/ or rpc header stubs)

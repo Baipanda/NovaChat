@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package novachat;
+
+message ResultCode {
+  int32 errcode = 1;   // 0 = ok
+  bytes errmsg = 2;
+}

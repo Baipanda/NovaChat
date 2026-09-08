@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package novachat;
+
+option cc_generic_services = true;
+
+import "common.proto";
+
+// 在线元数据：解决「在不在、在哪台 Chat 节点」
+// 不负责推送正文；跨机发消息仍走 Redis Pub/Sub。
+
+message PresenceInfo {
+  int32 userid = 1;
+  bool online = 2;
+  bytes gateway_id = 3;   // 例如 "gw-1" / "127.0.0.1:6666"
+  int64 last_seen_ms = 4;
+}
+
+message RegisterRequest {
+  int32 userid = 1;
+  bytes gateway_id = 2;
+}
+
+message RegisterResponse {
+  ResultCode result = 1;
+}
+
+message UnregisterRequest {
+  int32 userid = 1;
+  bytes gateway_id = 2;  // 带上 gateway，避免误删别的节点上的会话
+}
+
+message UnregisterResponse {
+  ResultCode result = 1;
+}
+
+message QueryRequest {
+  int32 userid = 1;
+}
+
+message QueryResponse {
+  ResultCode result = 1;
+  PresenceInfo info = 2;
+}
+
+message KickRequest {
+  int32 userid = 1;
+  bytes reason = 2;
+}
+
+message KickResponse {
+  ResultCode result = 1;
+  bytes gateway_id = 2;  // 告诉调用方去哪台机断连接（可选）
+}
+
+message ListRequest {
+}
+
+message ListResponse {
+  ResultCode result = 1;
+  repeated PresenceInfo list = 2;
+}
+
+service PresenceServiceRpc {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Unregister(UnregisterRequest) returns (UnregisterResponse);
+  rpc Query(QueryRequest) returns (QueryResponse);
+  rpc Kick(KickRequest) returns (KickResponse);
+  rpc List(ListRequest) returns (ListResponse);
+}

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NovaChat</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#12151a; --panel:#1a1f27; --line:#2c3440; --text:#e6ebf2;
+      --muted:#8b96a8; --accent:#3db89a; --ok:#6bcf8e; --danger:#d96b6b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:"IBM Plex Sans",sans-serif;color:var(--text);
+      background:radial-gradient(1000px 500px at 0% 0%,#1e2a28,transparent 55%),var(--bg)}
+    .shell{max-width:1080px;margin:0 auto;padding:24px 16px;display:grid;gap:16px}
+    h1{margin:0;font-family:"IBM Plex Mono",monospace;font-size:1.8rem}
+    .grid{display:grid;grid-template-columns:300px 1fr;gap:14px}
+    @media(max-width:860px){.grid{grid-template-columns:1fr}}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+    h2{margin:0 0 10px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:"IBM Plex Mono",monospace}
+    label{display:block;font-size:.8rem;color:var(--muted);margin:8px 0 4px}
+    input,button,select{font:inherit}
+    input,select{width:100%;background:#0f1318;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:10px 12px}
+    .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    button{border:0;border-radius:6px;padding:10px 14px;cursor:pointer;background:var(--accent);color:#06241c;font-weight:600}
+    button.secondary{background:transparent;color:var(--text);border:1px solid var(--line)}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    #status{margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--muted)}
+    #status.ok{color:var(--ok)} #status.bad{color:var(--danger)}
+    #friends,#groups{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:180px;overflow:auto}
+    #friends li,#groups li{
+      padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:#12171e;
+      display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:10px;
+    }
+    .friend-main,.group-main{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+    .friend-name,.group-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .friend-state{
+      flex:0 0 auto;font-size:.78rem;font-family:"IBM Plex Mono",monospace;
+      color:var(--muted);min-width:3.5rem;text-align:right;
+    }
+    .friend-state.on{color:var(--ok)}
+    .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:var(--muted)}
+    .dot.on{background:var(--ok)}
+    #log{height:340px;overflow:auto;white-space:pre-wrap;font-family:"IBM Plex Mono",monospace;font-size:.82rem;line-height:1.45;background:#0d1116;border:1px solid var(--line);border-radius:8px;padding:12px}
+    .composer{display:grid;grid-template-columns:110px 1fr auto;gap:8px;margin-top:12px}
+    .tools{display:grid;gap:8px;margin-top:12px}
+    .tools .row input{flex:1;min-width:80px}
+    @media(max-width:860px){.composer{grid-template-columns:1fr}}
+    .hint{margin-top:8px;color:var(--muted);font-size:.85rem}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header><h1>NovaChat</h1></header>
+    <div class="grid">
+      <aside class="panel">
+        <h2>Session</h2>
+        <label>User ID（1 alice / 2 bob / 3 carol）</label>
+        <input id="uid" value="1" />
+        <label>Password</label>
+        <input id="pwd" type="password" value="123456" />
+        <div class="row">
+          <button id="btnLogin">Login</button>
+          <button id="btnLogout" class="secondary" disabled>Logout</button>
+        </div>
+        <div id="status">disconnected</div>
+
+        <h2 style="margin-top:18px">Friends</h2>
+        <ul id="friends"></ul>
+        <div class="row">
+          <input id="friendId" placeholder="friend id" />
+          <button id="btnAddFriend" class="secondary" disabled>Add</button>
+        </div>
+
+        <h2 style="margin-top:18px">Groups</h2>
+        <ul id="groups"></ul>
+        <div class="tools">
+          <div class="row">
+            <input id="gname" placeholder="group name" />
+            <input id="gdesc" placeholder="desc" />
+            <button id="btnCreateGroup" class="secondary" disabled>Create</button>
+          </div>
+          <div class="row">
+            <input id="gidJoin" placeholder="group id" />
+            <button id="btnJoinGroup" class="secondary" disabled>Join</button>
+          </div>
+        </div>
+      </aside>
+
+      <main class="panel">
+        <h2>Messages</h2>
+        <div id="log"></div>
+        <div class="composer">
+          <select id="mode">
+            <option value="chat">1:1 chat</option>
+            <option value="group">group chat</option>
+          </select>
+          <input id="target" value="2" placeholder="friend id / group id" />
+          <input id="msg" placeholder="message" />
+          <button id="btnSend" disabled>Send</button>
+        </div>
+        <p class="hint">点好友/群可填入目标；两窗口分别登录 alice 与 bob 即可互发。</p>
+      </main>
+    </div>
+  </div>
+  <script>
+    const LOGIN=1, LOGIN_ACK=2, LOGINOUT=3, ONE_CHAT=6, ADD_FRIEND=7, CREATE_GROUP=8, ADD_GROUP=9, GROUP_CHAT=10;
+    const logEl=document.getElementById('log');
+    const friendsEl=document.getElementById('friends');
+    const groupsEl=document.getElementById('groups');
+    const statusEl=document.getElementById('status');
+    const btnLogin=document.getElementById('btnLogin');
+    const btnLogout=document.getElementById('btnLogout');
+    const btnSend=document.getElementById('btnSend');
+    const authedBtns=[btnLogout,btnSend,document.getElementById('btnAddFriend'),
+      document.getElementById('btnCreateGroup'),document.getElementById('btnJoinGroup')];
+
+    let ws=null, me=null, friendCache=[];
+
+    function wsUrl(){
+      const host = location.hostname || '127.0.0.1';
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      // 经 Nginx(:8090) 反代时走同源 /ws；直连 Gateway 时用 :8089
+      if (location.port === '8090' || location.port === '80' || location.port === '') {
+        const port = location.port ? (':' + location.port) : '';
+        return `${proto}://${host}${port}/ws`;
+      }
+      return `${proto}://${host}:8089/`;
+    }
+    function log(s){const t=new Date().toLocaleTimeString();logEl.textContent+=`[${t}] ${s}\n`;logEl.scrollTop=logEl.scrollHeight}
+    function setAuthed(ok){
+      btnLogin.disabled=ok;
+      authedBtns.forEach(b=>b.disabled=!ok);
+      statusEl.textContent=ok?`online ${me.name} (#${me.id})`:'disconnected';
+      statusEl.className=ok?'ok':'';
+    }
+    function parseItem(raw){
+      if(raw==null) return null;
+      if(typeof raw==='object') return raw;
+      try{return JSON.parse(raw)}catch(e){return {name:String(raw)}}
+    }
+    function renderFriends(list){
+      friendCache=(list||[]).map(parseItem).filter(Boolean);
+      friendsEl.innerHTML='';
+      if(!friendCache.length){
+        const li=document.createElement('li');
+        li.innerHTML='<span class="friend-main" style="color:#8b96a8">empty</span>';
+        friendsEl.appendChild(li);
+        return;
+      }
+      friendCache.forEach(f=>{
+        const on=f.state==='online';
+        const li=document.createElement('li');
+        li.dataset.uid=String(f.id);
+        li.innerHTML=
+          `<span class="friend-main">`+
+            `<span class="dot${on?' on':''}" aria-hidden="true"></span>`+
+            `<span class="friend-name">${f.name||'?'} (#${f.id})</span>`+
+          `</span>`+
+          `<span class="friend-state${on?' on':''}">${on?'online':'offline'}</span>`;
+        li.onclick=()=>{
+          document.getElementById('mode').value='chat';
+          document.getElementById('target').value=f.id;
+        };
+        friendsEl.appendChild(li);
+      });
+    }
+    function applyPresence(list){
+      const online=new Set((list||[]).filter(x=>x.online).map(x=>Number(x.userid)));
+      friendCache=friendCache.map(f=>({...f, state: online.has(Number(f.id))?'online':'offline'}));
+      // 只更新已有好友行，避免乱改 DOM 文本
+      friendsEl.querySelectorAll('li[data-uid]').forEach(li=>{
+        const id=Number(li.dataset.uid);
+        const on=online.has(id);
+        const dot=li.querySelector('.dot');
+        const st=li.querySelector('.friend-state');
+        if(dot) dot.classList.toggle('on', on);
+        if(st){
+          st.classList.toggle('on', on);
+          st.textContent=on?'online':'offline';
+        }
+      });
+    }
+    function renderGroups(list){
+      groupsEl.innerHTML='';
+      const arr=(list||[]).map(parseItem).filter(Boolean);
+      if(!arr.length){
+        const li=document.createElement('li');
+        li.innerHTML='<span class="group-main" style="color:#8b96a8">empty</span>';
+        groupsEl.appendChild(li);
+        return;
+      }
+      arr.forEach(g=>{
+        const li=document.createElement('li');
+        const name=g.groupname||g.name||'?';
+        li.innerHTML=
+          `<span class="group-main"><span class="group-name">${name} (#${g.id})</span></span>`+
+          `<span class="friend-state">${g.groupdesc||''}</span>`;
+        li.onclick=()=>{
+          document.getElementById('mode').value='group';
+          document.getElementById('target').value=g.id;
+        };
+        groupsEl.appendChild(li);
+      });
+    }
+    function friendListFrom(js){return js.friends||js.friend||[]}
+
+    function connect(){
+      if(ws && (ws.readyState===0||ws.readyState===1)){ try{ws.close()}catch(e){} }
+      const url=wsUrl();
+      log('connecting '+url);
+      ws=new WebSocket(url);
+      ws.onopen=()=>{
+        statusEl.textContent='ws open, logging in...';
+        ws.send(JSON.stringify({
+          msgid:LOGIN,
+          id:Number(document.getElementById('uid').value),
+          password:document.getElementById('pwd').value
+        }));
+      };
+      ws.onmessage=(ev)=>{
+        let js; try{js=JSON.parse(ev.data)}catch(e){log('bad: '+ev.data);return}
+        if(js.msgid===LOGIN_ACK){
+          if(js.errno===0){
+            me={id:js.id,name:js.name}; setAuthed(true);
+            renderFriends(friendListFrom(js));
+            renderGroups(js.groups||[]);
+            log(`login ok ${js.name}`);
+            (js.offlinemsg||[]).forEach(m=>{
+              try{
+                const o=typeof m==='string'?JSON.parse(m):m;
+                if(o.msgid===GROUP_CHAT) log(`offline group[${o.groupid}] ${o.name||o.id}: ${o.msg}`);
+                else log(`offline ${o.name||o.id}: ${o.msg}`);
+              }catch(e){log('offline> '+m)}
+            });
+          }else{
+            log('login fail: '+(js.errmsg||js.errno));
+            statusEl.textContent=js.errmsg||'login failed';
+            statusEl.className='bad';
+            // 不立刻 close，方便看错误；用户可再点 Login
+          }
+          return;
+        }
+        if(js.msgid===ONE_CHAT){
+          log(`<< [${js.time||''}] ${js.name||js.id}: ${js.msg}`);
+          return;
+        }
+        if(js.msgid===GROUP_CHAT){
+          log(`<< group[${js.groupid}] [${js.time||''}] ${js.name||js.id}: ${js.msg}`);
+          return;
+        }
+        if(js.type==='presence'){
+          applyPresence(js.list||[]);
+          return;
+        }
+        if(js.type==='system'){
+          log('system: '+js.msg);
+          if(js.friends||js.friend) renderFriends(friendListFrom(js));
+          if(js.groups) renderGroups(js.groups);
+          return;
+        }
+        log('recv '+JSON.stringify(js));
+      };
+      ws.onclose=()=>{
+        me=null; setAuthed(false);
+        log('socket closed');
+      };
+      ws.onerror=()=>{statusEl.textContent='ws error (is Gateway running on :8089?)'; statusEl.className='bad'};
+    }
+
+    btnLogin.onclick=connect;
+    btnLogout.onclick=()=>{
+      if(ws&&ws.readyState===1&&me) ws.send(JSON.stringify({msgid:LOGINOUT,id:me.id}));
+      setTimeout(()=>ws&&ws.close(),80);
+    };
+    btnSend.onclick=()=>{
+      if(!ws||ws.readyState!==1||!me) return;
+      const mode=document.getElementById('mode').value;
+      const target=Number(document.getElementById('target').value);
+      const msg=document.getElementById('msg').value.trim();
+      if(!msg) return;
+      if(mode==='chat'){
+        ws.send(JSON.stringify({msgid:ONE_CHAT,id:me.id,name:me.name,to:target,toid:target,msg}));
+        log(`>> to=${target} ${msg}`);
+      }else{
+        ws.send(JSON.stringify({msgid:GROUP_CHAT,id:me.id,name:me.name,groupid:target,msg}));
+        log(`>> group=${target} ${msg}`);
+      }
+      document.getElementById('msg').value='';
+    };
+    document.getElementById('btnAddFriend').onclick=()=>{
+      const fid=Number(document.getElementById('friendId').value);
+      if(!fid||!me) return;
+      ws.send(JSON.stringify({msgid:ADD_FRIEND,id:me.id,friendid:fid}));
+    };
+    document.getElementById('btnCreateGroup').onclick=()=>{
+      const groupname=document.getElementById('gname').value.trim();
+      const groupdesc=document.getElementById('gdesc').value.trim()||'';
+      if(!groupname||!me) return;
+      ws.send(JSON.stringify({msgid:CREATE_GROUP,id:me.id,groupname,groupdesc}));
+    };
+    document.getElementById('btnJoinGroup').onclick=()=>{
+      const groupid=Number(document.getElementById('gidJoin').value);
+      if(!groupid||!me) return;
+      ws.send(JSON.stringify({msgid:ADD_GROUP,id:me.id,groupid}));
+    };
+    document.getElementById('msg').addEventListener('keydown',e=>{if(e.key==='Enter') btnSend.click()});
+  </script>
+</body>
+</html>
