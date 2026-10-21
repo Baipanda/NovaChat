@@ -2,9 +2,15 @@ syntax = "proto3";
 
 package mprpc;
 
+// msg_type: 1=REQUEST 2=RESPONSE 3=PING 4=ACK
+// errcode: 0=ok; non-zero = transport-level failure (see rpcerror.h)
 message RpcHeader
 {
     bytes service_name = 1;
     bytes methode_name = 2;
     uint32 args_size = 3;
+    uint32 request_id = 4;
+    uint32 msg_type = 5;
+    int32 errcode = 6;
+    bytes errmsg = 7;
 }

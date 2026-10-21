@@ -1,26 +1,26 @@
 #pragma once
 
+#include "redis.hpp"
 #include <string>
 #include <vector>
 
-struct PresenceView {
-    int userid = 0;
-    bool online = false;
-    std::string gateway_id;
-    int64_t last_seen_ms = 0;
-};
+using PresenceView = PresenceRecord;
 
-// Gateway 侧 Presence RPC 客户端（打到独立 PresenceService 进程）
-class PresenceRpcClient
+class PresenceClient
 {
 public:
-    static PresenceRpcClient& Instance();
-
-    bool Register(int userid, const std::string& gateway_id);
-    bool Unregister(int userid, const std::string& gateway_id);
+    static PresenceClient& Instance();
+    void BindRedis(Redis* redis);
+    bool Register(int userid, const std::string& gateway_id, const std::string& rpc_addr);
+    bool Unregister(int userid);
+    bool Refresh(int userid);
     bool Query(int userid, PresenceView* out);
     std::vector<PresenceView> List();
 
 private:
-    PresenceRpcClient() = default;
+    PresenceClient() = default;
+    Redis* redis_ = nullptr;
+    int ttl_sec_ = 90;
 };
+
+using PresenceRpcClient = PresenceClient;

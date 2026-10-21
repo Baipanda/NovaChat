@@ -49,30 +49,59 @@ void ZkClient::Start()
 
 void ZkClient::Create(const char* path, const char* data, int datalen, int flags)
 {
-    char path_buffer[128] = {0};
+    if (!m_zhandle || !path) return;
+
+    char path_buffer[256] = {0};
     int bufferlen = sizeof(path_buffer);
-    int flag = zoo_exists(m_zhandle, path, 0, nullptr);
-    if (flag == ZNONODE) {
-        flag = zoo_create(m_zhandle, path, data, datalen,
-                          &ZOO_OPEN_ACL_UNSAFE, flags, path_buffer, bufferlen);
-        if (flag == ZOK) {
-            std::cout << "[zk] create success: " << path << std::endl;
-        } else {
-            std::cout << "[zk] create failed: " << path << " flag=" << flag << std::endl;
+
+    int rc = zoo_create(m_zhandle, path, data, datalen, &ZOO_OPEN_ACL_UNSAFE, flags,
+                        path_buffer, bufferlen);
+    if (rc == ZOK) {
+        std::cout << "[zk] create success: " << path
+                  << (flags & ZOO_EPHEMERAL ? " (ephemeral)" : "") << std::endl;
+        return;
+    }
+
+    if (rc == ZNODEEXISTS) {
+        // 持久节点已存在：正常；临时节点若仍在（同会话重复注册）刷新 data
+        if (data && datalen > 0) {
+            int set_rc = zoo_set(m_zhandle, path, data, datalen, -1);
+            if (set_rc != ZOK) {
+                std::cout << "[zk] set data on existing node: " << path
+                          << " rc=" << set_rc << " " << zerror(set_rc) << std::endl;
+            }
+        }
+        std::cout << "[zk] already exists: " << path << std::endl;
+        return;
+    }
+
+    // 临时节点若被旧会话占着（少见），删了再建
+    if ((flags & ZOO_EPHEMERAL) && rc != ZOK) {
+        zoo_delete(m_zhandle, path, -1);
+        rc = zoo_create(m_zhandle, path, data, datalen, &ZOO_OPEN_ACL_UNSAFE, flags,
+                        path_buffer, bufferlen);
+        if (rc == ZOK) {
+            std::cout << "[zk] recreate success: " << path << " (ephemeral)" << std::endl;
+            return;
         }
     }
+
+    std::cout << "[zk] create failed: " << path << " rc=" << rc << " " << zerror(rc)
+              << std::endl;
 }
 
 std::string ZkClient::GetData(const char* path)
 {
-    char buffer[128] = {0};
+    char buffer[256] = {0};
     int bufferlen = sizeof(buffer);
     int flag = zoo_get(m_zhandle, path, 0, buffer, &bufferlen, nullptr);
     if (flag != ZOK) {
-        std::cout << "[zk] get data failed: " << path << std::endl;
+        std::cout << "[zk] get data failed: " << path << " rc=" << flag << " "
+                  << zerror(flag) << std::endl;
         return "";
     }
-    return buffer;
+    if (bufferlen < 0) return "";
+    return std::string(buffer, static_cast<size_t>(bufferlen));
 }
 
 std::vector<std::string> ZkClient::GetChildren(const char* path)
@@ -82,7 +111,8 @@ std::vector<std::string> ZkClient::GetChildren(const char* path)
     memset(&children, 0, sizeof(children));
     int flag = zoo_get_children(m_zhandle, path, 0, &children);
     if (flag != ZOK) {
-        std::cout << "[zk] get children failed: " << path << " flag=" << flag << std::endl;
+        std::cout << "[zk] get children failed: " << path << " rc=" << flag << " "
+                  << zerror(flag) << std::endl;
         return out;
     }
     for (int i = 0; i < children.count; ++i) {

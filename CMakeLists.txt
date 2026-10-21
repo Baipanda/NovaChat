@@ -28,12 +28,12 @@ link_directories(
   ${PROJECT_SOURCE_DIR}/lib
 )
 
-# 自研 RPC 框架 + Presence 服务（默认开启，与 Gateway 联调）
-option(NOVA_BUILD_RPC "Build rpc framework and PresenceService" ON)
+# 自研 RPC + UserService（ZK 服务级注册；Gateway 调 GetUserProfile）
+option(NOVA_BUILD_RPC "Build rpc framework and UserService" ON)
 
 if(NOVA_BUILD_RPC)
   add_subdirectory(rpc)
-  add_subdirectory(services/presence)
+  add_subdirectory(services/user)
 endif()
 
 add_subdirectory(gateway)

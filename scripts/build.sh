@@ -9,4 +9,4 @@ mkdir -p "$ROOT/build"
 cd "$ROOT/build"
 cmake .. -DNOVA_DEPS_PREFIX="$PREFIX" -DNOVA_BUILD_RPC=ON
 make -j"$(nproc)"
-echo "OK -> bin/NovaGateway bin/NovaClient bin/PresenceService"
+echo "OK -> bin/NovaGateway bin/NovaClient bin/UserService"

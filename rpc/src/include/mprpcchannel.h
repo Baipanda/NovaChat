@@ -1,15 +1,26 @@
 #pragma once
+
+#include <cstdint>
 #include <google/protobuf/service.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/message.h>
+#include <string>
 
 class MprpcChannel : public google::protobuf::RpcChannel
 {
 public:
-    // 所有通过stub代理对象的rpc方法，都走到这里，统一做rpc方法调用数据序列化和网络发送
+    MprpcChannel() = default;
+    MprpcChannel(std::string ip, uint16_t port);
+
     void CallMethod(const google::protobuf::MethodDescriptor* method,
-                  google::protobuf::RpcController* controller,
-                  const google::protobuf::Message* request,
-                  google::protobuf::Message* response,
-                  google::protobuf::Closure* done);
+                    google::protobuf::RpcController* controller,
+                    const google::protobuf::Message* request,
+                    google::protobuf::Message* response,
+                    google::protobuf::Closure* done) override;
+
+    int LastError() const { return last_error_; }
+
+private:
+    bool fixed_addr_ = false;
+    std::string ip_;
+    uint16_t port_ = 0;
+    int last_error_ = 0;
 };

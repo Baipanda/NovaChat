@@ -1,35 +1,19 @@
-# Presence RPC 骨架说明
+# 当前架构说明（已替换旧 Presence/ChatPush RPC）
 
-## 角色
+## ZK
+
+仅保留：
 
 ```text
-Chat Node                          PresenceService
-  login ──Register(uid,gw)──►        map[uid]= {online, gateway_id}
-  logout ─Unregister────────►        erase if same gw
-  ?路由 ──Query(uid)────────►        返回 online + gateway_id
-  发消息 ─ Redis PUBLISH ──► 其他 Chat（不经 Presence 传正文）
+/NovaChat-service/UserServiceRpc/{ip:port}
 ```
 
-## 文件
+用于 Gateway 发现 **UserService**，调用 `GetUserProfile`（昵称/头像/状态）。
 
-| 路径 | 作用 |
-|------|------|
-| `proto/presence.proto` | IDL：Register / Unregister / Query / Kick |
-| `services/presence/presence_store.*` | 内存路由表 |
-| `services/presence/presence_service.hpp` | 业务方法 + 如何挂 mprpc 的注释 |
-| `services/presence/main.cpp` | 进程入口；当前本地自测，Run() 待接线 |
-| `gateway/include/presence_client.hpp` | Chat 侧调用门面与挂载点注释 |
+## Redis
 
-## 与原版关系
+仅 **Pub/Sub**：跨 Gateway 在线推送私聊/群聊。
 
-- **保留**：`_userConnMap`、MySQL `state`、Redis 跨机推送  
-- **新增**：可查询的 `uid → gateway_id`（原版没有）  
-- **不替代**：用 Presence 传聊天消息
+## MySQL `message`
 
-## 生成桩后接线
-
-```bash
-protoc -I proto --cpp_out=proto proto/common.proto proto/presence.proto
-```
-
-然后让 `PresenceService` 继承 `novachat::PresenceServiceRpc`，`main` 里 `NotifyService` + `Run()`。
+消息先落库；离线 `status=0`；上线拉取后客户端 ACK → `status=1`。

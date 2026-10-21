@@ -2,6 +2,7 @@
 #include "chatservice.hpp"
 #include "clientsend.hpp"
 #include "json.hpp"
+#include "user_rpc_client.hpp"
 
 #include <muduo/base/Logging.h>
 #include <muduo/net/http/HttpRequest.h>
@@ -92,7 +93,19 @@ void WebPortal::onHttpRequest(const HttpRequest& req, HttpResponse* resp)
     string path = req.path();
     if (path == "/") path = "/index.html";
 
-    // 简单防目录穿越
+    // ZK 演示：列出 UserServiceRpc 临时节点
+    if (path == "/api/zk/userservice") {
+        json j;
+        j["path"] = "/NovaChat-service/UserServiceRpc";
+        j["nodes"] = UserRpcClient::Instance().ListZkNodes();
+        resp->setStatusCode(HttpResponse::k200Ok);
+        resp->setStatusMessage("OK");
+        resp->setContentType("application/json; charset=utf-8");
+        resp->addHeader("Access-Control-Allow-Origin", "*");
+        resp->setBody(j.dump());
+        return;
+    }
+
     if (path.find("..") != string::npos) {
         resp->setStatusCode(HttpResponse::k400BadRequest);
         resp->setStatusMessage("Bad Request");
@@ -177,7 +190,8 @@ void WebPortal::onWsMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp
     }
 
     vector<string> messages;
-    WsDecodeTexts(cache, &messages);
+    bool got_close = false;
+    WsDecodeTexts(cache, &messages, &got_close);
     for (string& msg : messages) {
         // 兼容前端 JSON；去掉可能的尾零
         while (!msg.empty() && msg.back() == '\0') msg.pop_back();
@@ -190,5 +204,11 @@ void WebPortal::onWsMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp
             LOG_ERROR << "WS json error: " << ex.what() << " raw=" << msg;
             ClientSend(conn, string("{\"type\":\"system\",\"msg\":\"bad json\"}"));
         }
+    }
+    // 浏览器关页常先发 Close 帧；立刻落 offline，不等 TCP 完全断开
+    if (got_close) {
+        ChatService::instance()->clientCloseException(conn);
+        _wsBuffers.erase(conn);
+        if (conn->connected()) conn->shutdown();
     }
 }

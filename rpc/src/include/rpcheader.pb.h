@@ -174,11 +174,43 @@ class RpcHeader : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::std::string* release_methode_name();
   void set_allocated_methode_name(::std::string* methode_name);
 
+  // bytes errmsg = 7;
+  void clear_errmsg();
+  static const int kErrmsgFieldNumber = 7;
+  const ::std::string& errmsg() const;
+  void set_errmsg(const ::std::string& value);
+  #if LANG_CXX11
+  void set_errmsg(::std::string&& value);
+  #endif
+  void set_errmsg(const char* value);
+  void set_errmsg(const void* value, size_t size);
+  ::std::string* mutable_errmsg();
+  ::std::string* release_errmsg();
+  void set_allocated_errmsg(::std::string* errmsg);
+
   // uint32 args_size = 3;
   void clear_args_size();
   static const int kArgsSizeFieldNumber = 3;
   ::google::protobuf::uint32 args_size() const;
   void set_args_size(::google::protobuf::uint32 value);
+
+  // uint32 request_id = 4;
+  void clear_request_id();
+  static const int kRequestIdFieldNumber = 4;
+  ::google::protobuf::uint32 request_id() const;
+  void set_request_id(::google::protobuf::uint32 value);
+
+  // uint32 msg_type = 5;
+  void clear_msg_type();
+  static const int kMsgTypeFieldNumber = 5;
+  ::google::protobuf::uint32 msg_type() const;
+  void set_msg_type(::google::protobuf::uint32 value);
+
+  // int32 errcode = 6;
+  void clear_errcode();
+  static const int kErrcodeFieldNumber = 6;
+  ::google::protobuf::int32 errcode() const;
+  void set_errcode(::google::protobuf::int32 value);
 
   // @@protoc_insertion_point(class_scope:mprpc.RpcHeader)
  private:
@@ -186,7 +218,11 @@ class RpcHeader : public ::google::protobuf::Message /* @@protoc_insertion_point
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr service_name_;
   ::google::protobuf::internal::ArenaStringPtr methode_name_;
+  ::google::protobuf::internal::ArenaStringPtr errmsg_;
   ::google::protobuf::uint32 args_size_;
+  ::google::protobuf::uint32 request_id_;
+  ::google::protobuf::uint32 msg_type_;
+  ::google::protobuf::int32 errcode_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_rpcheader_2eproto::TableStruct;
 };
@@ -319,6 +355,101 @@ inline void RpcHeader::set_args_size(::google::protobuf::uint32 value) {
   
   args_size_ = value;
   // @@protoc_insertion_point(field_set:mprpc.RpcHeader.args_size)
+}
+
+// uint32 request_id = 4;
+inline void RpcHeader::clear_request_id() {
+  request_id_ = 0u;
+}
+inline ::google::protobuf::uint32 RpcHeader::request_id() const {
+  // @@protoc_insertion_point(field_get:mprpc.RpcHeader.request_id)
+  return request_id_;
+}
+inline void RpcHeader::set_request_id(::google::protobuf::uint32 value) {
+  
+  request_id_ = value;
+  // @@protoc_insertion_point(field_set:mprpc.RpcHeader.request_id)
+}
+
+// uint32 msg_type = 5;
+inline void RpcHeader::clear_msg_type() {
+  msg_type_ = 0u;
+}
+inline ::google::protobuf::uint32 RpcHeader::msg_type() const {
+  // @@protoc_insertion_point(field_get:mprpc.RpcHeader.msg_type)
+  return msg_type_;
+}
+inline void RpcHeader::set_msg_type(::google::protobuf::uint32 value) {
+  
+  msg_type_ = value;
+  // @@protoc_insertion_point(field_set:mprpc.RpcHeader.msg_type)
+}
+
+// int32 errcode = 6;
+inline void RpcHeader::clear_errcode() {
+  errcode_ = 0;
+}
+inline ::google::protobuf::int32 RpcHeader::errcode() const {
+  // @@protoc_insertion_point(field_get:mprpc.RpcHeader.errcode)
+  return errcode_;
+}
+inline void RpcHeader::set_errcode(::google::protobuf::int32 value) {
+  
+  errcode_ = value;
+  // @@protoc_insertion_point(field_set:mprpc.RpcHeader.errcode)
+}
+
+// bytes errmsg = 7;
+inline void RpcHeader::clear_errmsg() {
+  errmsg_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& RpcHeader::errmsg() const {
+  // @@protoc_insertion_point(field_get:mprpc.RpcHeader.errmsg)
+  return errmsg_.GetNoArena();
+}
+inline void RpcHeader::set_errmsg(const ::std::string& value) {
+  
+  errmsg_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:mprpc.RpcHeader.errmsg)
+}
+#if LANG_CXX11
+inline void RpcHeader::set_errmsg(::std::string&& value) {
+  
+  errmsg_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:mprpc.RpcHeader.errmsg)
+}
+#endif
+inline void RpcHeader::set_errmsg(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  errmsg_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:mprpc.RpcHeader.errmsg)
+}
+inline void RpcHeader::set_errmsg(const void* value, size_t size) {
+  
+  errmsg_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:mprpc.RpcHeader.errmsg)
+}
+inline ::std::string* RpcHeader::mutable_errmsg() {
+  
+  // @@protoc_insertion_point(field_mutable:mprpc.RpcHeader.errmsg)
+  return errmsg_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* RpcHeader::release_errmsg() {
+  // @@protoc_insertion_point(field_release:mprpc.RpcHeader.errmsg)
+  
+  return errmsg_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void RpcHeader::set_allocated_errmsg(::std::string* errmsg) {
+  if (errmsg != NULL) {
+    
+  } else {
+    
+  }
+  errmsg_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), errmsg);
+  // @@protoc_insertion_point(field_set_allocated:mprpc.RpcHeader.errmsg)
 }
 
 #ifdef __GNUC__

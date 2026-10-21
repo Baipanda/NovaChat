@@ -25,11 +25,21 @@ bool GroupModel::createGroup(Group &group)
 // 加入群组
 void GroupModel::addGroup(int userid, int groupid, string role)
 {
-    // 1.组装sql语句
     char sql[1024] = {0};
     sprintf(sql, "insert into groupuser values(%d, %d, '%s')",
             groupid, userid, role.c_str());
 
+    MySQL mysql;
+    if (mysql.connect())
+    {
+        mysql.update(sql);
+    }
+}
+
+void GroupModel::quitGroup(int userid, int groupid)
+{
+    char sql[1024] = {0};
+    sprintf(sql, "delete from groupuser where groupid=%d and userid=%d", groupid, userid);
     MySQL mysql;
     if (mysql.connect())
     {

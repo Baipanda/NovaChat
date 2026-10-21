@@ -6,45 +6,24 @@ option cc_generic_services = true;
 
 import "common.proto";
 
+// 用户资料（昵称 / 在线状态 / 头像），供 ChatServer 经 RPC 查询
 message UserInfo {
   int32 id = 1;
   bytes name = 2;
-  bytes state = 3;  // online / offline
+  bytes state = 3;    // online / offline
+  bytes avatar = 4;   // URL
 }
 
-message LoginRequest {
-  int32 id = 1;
-  bytes password = 2;
+message GetUserProfileRequest {
+  int32 userid = 1;
 }
 
-message LoginResponse {
+message GetUserProfileResponse {
   ResultCode result = 1;
   UserInfo user = 2;
-  repeated bytes offline_msgs = 3;
-  repeated UserInfo friends = 4;
-}
-
-message RegisterRequest {
-  bytes name = 1;
-  bytes password = 2;
-}
-
-message RegisterResponse {
-  ResultCode result = 1;
-  int32 id = 2;
-}
-
-message SetStateRequest {
-  int32 id = 1;
-  bytes state = 2;
-}
-
-message SetStateResponse {
-  ResultCode result = 1;
 }
 
 service UserServiceRpc {
-  rpc Login(LoginRequest) returns (LoginResponse);
-  rpc Register(RegisterRequest) returns (RegisterResponse);
-  rpc SetState(SetStateRequest) returns (SetStateResponse);
+  // 按 userid 查询昵称、头像、在线状态等资料
+  rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse);
 }

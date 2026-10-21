@@ -1,34 +1,60 @@
-#include <iostream>
 #include "mprpcapplication.h"
 #include "rpcprovider.h"
+#include "user.pb.h"
+#include "usermodel.hpp"
 
-/*
- * NovaChat UserService
- *
- * 目标形态（伪代码）：
- *   class UserService : public novachat::UserServiceRpc {
- *     void Login(..., const LoginRequest* req, LoginResponse* resp, Closure* done) {
- *       // UserModel::query / updateState
- *       // OfflineMsgModel::query
- *       // FriendModel::query
- *       done->Run();
- *     }
- *   };
- *
- *   RpcProvider provider;
- *   provider.NotifyService(new UserService);
- *   provider.Run();
- */
+#include <iostream>
+#include <string>
+
+using namespace novachat;
+
+namespace {
+std::string AvatarUrl(int userid)
+{
+    return "https://api.dicebear.com/7.x/thumbs/svg?seed=" + std::to_string(userid);
+}
+
+void FillUserInfo(UserInfo* info, User& u)
+{
+    info->set_id(u.getId());
+    info->set_name(u.getName());
+    info->set_state(u.getState());
+    info->set_avatar(AvatarUrl(u.getId()));
+}
+
+class UserServiceImpl : public UserServiceRpc
+{
+public:
+    void GetUserProfile(::google::protobuf::RpcController*,
+                        const GetUserProfileRequest* req,
+                        GetUserProfileResponse* resp,
+                        ::google::protobuf::Closure* done) override
+    {
+        User u = userModel_.query(req->userid());
+        if (u.getId() == req->userid()) {
+            resp->mutable_result()->set_errcode(0);
+            FillUserInfo(resp->mutable_user(), u);
+            std::cout << "[UserService] GetUserProfile uid=" << req->userid()
+                      << " name=" << u.getName() << std::endl;
+        } else {
+            resp->mutable_result()->set_errcode(1);
+            resp->mutable_result()->set_errmsg("user not found");
+        }
+        done->Run();
+    }
+
+private:
+    UserModel userModel_;
+};
+}  // namespace
 
 int main(int argc, char** argv)
 {
     MprpcApplication::Init(argc, argv);
-
-    std::cout << "[UserService] NovaChat user RPC node ready (skeleton).\n"
-              << "  Next: bind novachat::UserServiceRpc + MySQL models.\n"
-              << "  Config: " << (argc > 2 ? argv[2] : "conf/user.conf") << std::endl;
-
-    // 骨架阶段：初始化框架后直接退出说明，避免无服务注册时空转。
-    // 接入 proto 后改为 RpcProvider::Run()。
+    RpcProvider provider;
+    UserServiceImpl service;
+    provider.NotifyService(&service);
+    std::cout << "[UserService] serving GetUserProfile, ZK=/NovaChat-service/UserServiceRpc\n";
+    provider.Run();
     return 0;
 }

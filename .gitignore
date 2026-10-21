@@ -22,6 +22,19 @@ thirdparty/hiredis/
 /tmp/
 .env
 .env.*
+*.pid
+
+# personal / private — do not upload
+*.pdf
+*.PDF
+*简历*
+*resume*
+*Resume*
+*RESUME*
+*CV*
+**/cv/**
+**/resume/**
+**/简历/**
 
 # keep generated protobuf sources that the tree depends on
 # (do not ignore proto/ or rpc header stubs)

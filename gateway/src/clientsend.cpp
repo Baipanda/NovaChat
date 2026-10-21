@@ -6,23 +6,56 @@
 
 using muduo::net::TcpConnectionPtr;
 
-static const char* kWsTag = "ws";
+static ClientConnCtx* CtxMut(const TcpConnectionPtr& conn)
+{
+    if (!conn) return nullptr;
+    boost::any* ctx = conn->getMutableContext();
+    if (!ctx) return nullptr;
+    if (ctx->empty()) {
+        *ctx = ClientConnCtx{};
+    }
+    ClientConnCtx* p = boost::any_cast<ClientConnCtx>(ctx);
+    if (!p) {
+        *ctx = ClientConnCtx{};
+        p = boost::any_cast<ClientConnCtx>(ctx);
+    }
+    return p;
+}
+
+static const ClientConnCtx* CtxGet(const TcpConnectionPtr& conn)
+{
+    if (!conn) return nullptr;
+    const boost::any& ctx = conn->getContext();
+    if (ctx.empty()) return nullptr;
+    try {
+        return boost::any_cast<ClientConnCtx>(&ctx);
+    } catch (...) {
+        return nullptr;
+    }
+}
 
 bool IsWebSocketConn(const TcpConnectionPtr& conn)
 {
-    if (!conn) return false;
-    const boost::any& ctx = conn->getContext();
-    if (ctx.empty()) return false;
-    try {
-        return boost::any_cast<std::string>(ctx) == kWsTag;
-    } catch (...) {
-        return false;
-    }
+    const ClientConnCtx* c = CtxGet(conn);
+    return c && c->websocket;
 }
 
 void MarkWebSocketConn(const TcpConnectionPtr& conn)
 {
-    if (conn) conn->setContext(std::string(kWsTag));
+    ClientConnCtx* c = CtxMut(conn);
+    if (c) c->websocket = true;
+}
+
+void BindConnUser(const TcpConnectionPtr& conn, int userid)
+{
+    ClientConnCtx* c = CtxMut(conn);
+    if (c) c->userid = userid;
+}
+
+int BoundUserId(const TcpConnectionPtr& conn)
+{
+    const ClientConnCtx* c = CtxGet(conn);
+    return c ? c->userid : -1;
 }
 
 std::string WsEncodeText(const std::string& payload)
@@ -46,8 +79,9 @@ std::string WsEncodeText(const std::string& payload)
     return out;
 }
 
-size_t WsDecodeTexts(std::string& buffer, std::vector<std::string>* out_messages)
+size_t WsDecodeTexts(std::string& buffer, std::vector<std::string>* out_messages, bool* got_close)
 {
+    if (got_close) *got_close = false;
     size_t consumed = 0;
     while (true) {
         if (buffer.size() < 2) break;
@@ -85,9 +119,10 @@ size_t WsDecodeTexts(std::string& buffer, std::vector<std::string>* out_messages
         consumed += frameSize;
 
         if (opcode == 0x8) { // close
+            if (got_close) *got_close = true;
             break;
         }
-        if (opcode == 0x9) { // ping -> ignore / could pong
+        if (opcode == 0x9) { // ping
             continue;
         }
         if ((opcode == 0x1 || opcode == 0x0) && fin && out_messages) {

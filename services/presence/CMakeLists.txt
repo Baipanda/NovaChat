@@ -10,5 +10,5 @@ target_include_directories(PresenceService PRIVATE
   ${NOVA_DEPS_PREFIX}/include
 )
 target_link_libraries(PresenceService
-  rpc muduo_net muduo_base protobuf pthread
+  rpc muduo_net muduo_base protobuf zookeeper_mt pthread
 )

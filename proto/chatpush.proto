@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package novachat;
+
+option cc_generic_services = true;
+
+import "common.proto";
+
+message PushPrivateMsgRequest {
+  int32 userid = 1;
+  bytes payload = 2;
+  bytes idempotency_key = 3;  // client-generated; duplicate safe to retry on timeout
+}
+
+message PushPrivateMsgResponse {
+  ResultCode result = 1;
+  // errcode: 0=ok  1=not on this node  2=offline
+  bool duplicated = 2;  // true if idempotency_key already delivered
+}
+
+service ChatPushServiceRpc {
+  rpc PushPrivateMsg(PushPrivateMsgRequest) returns (PushPrivateMsgResponse);
+}

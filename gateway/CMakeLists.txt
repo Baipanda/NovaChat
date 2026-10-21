@@ -1,8 +1,11 @@
-# Gateway：长连接接入 + Presence RPC 客户端
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src GATEWAY_SRC)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src/db GATEWAY_DB)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src/model GATEWAY_MODEL)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src/redis GATEWAY_REDIS)
+
+# Exclude legacy ChatPush sources if still present on disk
+list(FILTER GATEWAY_SRC EXCLUDE REGEX ".*/chat_push_.*\\.cpp$")
+list(FILTER GATEWAY_SRC EXCLUDE REGEX ".*/presence_rpc_client\\.cpp$")
 
 add_executable(NovaGateway
   ${GATEWAY_SRC}
@@ -10,7 +13,7 @@ add_executable(NovaGateway
   ${GATEWAY_MODEL}
   ${GATEWAY_REDIS}
   ${CMAKE_SOURCE_DIR}/proto/common.pb.cc
-  ${CMAKE_SOURCE_DIR}/proto/presence.pb.cc
+  ${CMAKE_SOURCE_DIR}/proto/user.pb.cc
 )
 
 target_include_directories(NovaGateway PRIVATE
@@ -30,6 +33,7 @@ target_link_libraries(NovaGateway
   mysqlclient
   hiredis
   protobuf
+  zookeeper_mt
   pthread
   ssl crypto dl z resolv
 )

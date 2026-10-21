@@ -3,9 +3,22 @@
 // 添加好友关系
 void FriendModel::insert(int userid, int friendid)
 {
-    // 组装sql语句
     char sql[1024] = {0};
-    sprintf(sql, "insert into friend values(%d, %d)", userid, friendid);
+    sprintf(sql, "insert ignore into friend values(%d, %d)", userid, friendid);
+    MySQL mysql;
+    if (mysql.connect())
+    {
+        mysql.update(sql);
+    }
+}
+
+void FriendModel::remove(int userid, int friendid)
+{
+    char sql[1024] = {0};
+    // 双向删除
+    sprintf(sql,
+            "delete from friend where (userid=%d and friendid=%d) or (userid=%d and friendid=%d)",
+            userid, friendid, friendid, userid);
     MySQL mysql;
     if (mysql.connect())
     {
