@@ -701,12 +701,13 @@ function bindSectionToggle(btnId, sectionSel) {
 }
 
 function initTheme() {
-  const saved = localStorage.getItem('nova-theme') || 'dark';
+  // 默认白天模式；换 key 避免旧版强制 dark 的缓存残留
+  const saved = localStorage.getItem('nova-ui-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
   $('themeToggle').onclick = () => {
     const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', cur);
-    localStorage.setItem('nova-theme', cur);
+    localStorage.setItem('nova-ui-theme', cur);
   };
 }
 
